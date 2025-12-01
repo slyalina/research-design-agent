@@ -128,7 +128,6 @@ python3 main_agent.py
 ```
 
 For deployment instructions (Docker/Cloud Run), see [DEPLOYMENT.md](DEPLOYMENT.md).
-For the video submission script, see [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md).
 
 ### Example Interactions
 
