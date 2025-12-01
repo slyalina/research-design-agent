@@ -5,7 +5,12 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from power_analysis_agent import create_power_analysis_agent
 from literature_agent import create_literature_agent
+from literature_agent import create_literature_agent
 from proposal_agent import create_proposal_agent
+from biomarker_agent import create_biomarker_agent
+from biomarker_agent import create_biomarker_agent
+from criticism_agent import create_criticism_agent
+from microbiome_agent import create_microbiome_agent
 
 def main():
     # Initialize the model name
@@ -15,6 +20,10 @@ def main():
     power_agent = create_power_analysis_agent(model_name)
     literature_agent = create_literature_agent(model_name)
     proposal_agent = create_proposal_agent(model_name)
+    biomarker_agent = create_biomarker_agent(model_name)
+    biomarker_agent = create_biomarker_agent(model_name)
+    criticism_agent = create_criticism_agent(model_name)
+    microbiome_agent = create_microbiome_agent(model_name)
 
     # Create the main agent
     main_agent = Agent(
@@ -28,10 +37,14 @@ You can help with:
 - Selecting appropriate statistical tests.
 - Performing power analysis (by delegating to the Power Analysis Specialist).
 - Searching scientific literature (by delegating to the Literature Review Specialist).
+- Finding public biomarker datasets (by delegating to the Biomarker Data Specialist).
+- Processing microbiome data (by delegating to the Microbiome Tool Runner).
 - Generating full research proposals (by orchestrating all specialists).
 
 If the user needs a power analysis or sample size calculation, delegate the task to the Power Analysis Specialist.
 If the user needs to search for papers, effect sizes, or study designs in the literature, delegate to the Literature Review Specialist.
+If the user needs to find public datasets (SRA, GEO, Cell x Gene), delegate to the Biomarker Data Specialist.
+If the user needs to run kneaddata, metaphlan2, humann2, or process microbiome sequencing data, delegate to the Microbiome Tool Runner.
 If the user asks for a "proposal", "protocol", or "study design", initiate the proposal generation workflow.
 """
     )
@@ -43,6 +56,9 @@ If the user asks for a "proposal", "protocol", or "study design", initiate the p
     power_runner = Runner(app_name=app_name, agent=power_agent, session_service=session_service)
     literature_runner = Runner(app_name=app_name, agent=literature_agent, session_service=session_service)
     proposal_runner = Runner(app_name=app_name, agent=proposal_agent, session_service=session_service)
+    biomarker_runner = Runner(app_name=app_name, agent=biomarker_agent, session_service=session_service)
+    criticism_runner = Runner(app_name=app_name, agent=criticism_agent, session_service=session_service)
+    microbiome_runner = Runner(app_name=app_name, agent=microbiome_agent, session_service=session_service)
     main_runner = Runner(app_name=app_name, agent=main_agent, session_service=session_service)
     
     print("Bioinformatics Research Design Agent Initialized.")
@@ -117,8 +133,43 @@ If the user asks for a "proposal", "protocol", or "study design", initiate the p
                 except Exception as e:
                     print(f"\nWarning: Power analysis had issues: {e}")
 
+                # Step 2.5: Human-in-the-Loop Feedback
+                print(f"\n[Step 2.5/4] Human-in-the-Loop: Reviewing Power Analysis...", flush=True)
+                print("-" * 40)
+                print(f"Current Power Analysis Context:\n{power_context}")
+                print("-" * 40)
+                
+                print("\nAgent (Lead): Do you want to proceed with these parameters? (yes/no/adjust)")
+                feedback = input("User (Feedback): ").strip().lower()
+                
+                if feedback not in ["yes", "y", "proceed"]:
+                    print(f"\nAgent (Lead): Understood. Please provide your feedback or adjustments (e.g., 'Increase power to 0.9' or 'Change effect size to 0.8').")
+                    adjustment_input = input("User (Adjustments): ")
+                    
+                    print(f"\nAgent (Power Specialist): Re-calculating based on feedback...", flush=True)
+                    try:
+                        # Re-run power analysis with the new feedback
+                        # We create a new prompt that includes the previous context and the new adjustment
+                        adjustment_prompt = types.Content(role="user", parts=[types.Part(text=f"The user wants to adjust the previous power analysis. Feedback: {adjustment_input}. Please re-calculate.")])
+                        
+                        # Clear previous context to avoid duplication if we want, or just append. 
+                        # For a cleaner proposal, let's reset power_context and capture the new result.
+                        power_context = "" 
+                        for event in power_runner.run(user_id=user_id, session_id=session_id, new_message=adjustment_prompt):
+                            if hasattr(event, 'text'):
+                                print(event.text, end="", flush=True)
+                                power_context += event.text
+                            elif hasattr(event, 'content') and hasattr(event.content, 'parts'):
+                                for part in event.content.parts:
+                                    if hasattr(part, 'text'):
+                                        print(part.text, end="", flush=True)
+                                        power_context += part.text
+                    except Exception as e:
+                        print(f"\nWarning: Re-calculation had issues: {e}")
+
                 # Step 3: Proposal Synthesis
-                print(f"\n\n[Step 3/3] Agent (Proposal Specialist): Synthesizing proposal...", flush=True)
+                print(f"\n\n[Step 3/4] Agent (Proposal Specialist): Synthesizing proposal...", flush=True)
+                proposal_text = ""
                 try:
                     # Combine contexts into a prompt for the proposal agent
                     synthesis_prompt = f"""
@@ -137,14 +188,37 @@ If the user asks for a "proposal", "protocol", or "study design", initiate the p
                     for event in proposal_runner.run(user_id=user_id, session_id=session_id, new_message=proposal_message):
                         if hasattr(event, 'text'):
                             print(event.text, end="", flush=True)
+                            proposal_text += event.text
+                        elif hasattr(event, 'content') and hasattr(event.content, 'parts'):
+                            for part in event.content.parts:
+                                if hasattr(part, 'text'):
+                                    print(part.text, end="", flush=True)
+                                    proposal_text += part.text
+                except Exception as e:
+                    print(f"\nError generating proposal: {e}")
+
+                # Step 4: Methodological Review (Criticism)
+                print(f"\n\n[Step 4/4] Agent (Methodological Reviewer): Critiquing proposal...", flush=True)
+                try:
+                    criticism_prompt = f"""
+                    Please review the following research proposal for statistical rigor, bias, and methodological issues:
+                    
+                    {proposal_text}
+                    """
+                    criticism_message = types.Content(role="user", parts=[types.Part(text=criticism_prompt)])
+                    
+                    for event in criticism_runner.run(user_id=user_id, session_id=session_id, new_message=criticism_message):
+                        if hasattr(event, 'text'):
+                            print(event.text, end="", flush=True)
                         elif hasattr(event, 'content') and hasattr(event.content, 'parts'):
                             for part in event.content.parts:
                                 if hasattr(part, 'text'):
                                     print(part.text, end="", flush=True)
                 except Exception as e:
-                    print(f"\nError generating proposal: {e}")
+                    print(f"\nError in methodological review: {e}")
                 
                 print("\n\n[Workflow Complete]")
+
 
             elif "power" in user_lower or "sample size" in user_lower:
                 # Delegate to power agent
@@ -190,6 +264,42 @@ If the user asks for a "proposal", "protocol", or "study design", initiate the p
                         pass
                     else:
                         raise e
+                print()
+            elif any(keyword in user_lower for keyword in ["dataset", "sra", "ena", "geo", "microbiome data", "rnaseq data", "single cell", "cellxgene", "expression atlas"]):
+                # Delegate to biomarker agent
+                print(f"Agent (Biomarker Specialist): ", end="", flush=True)
+                try:
+                    for event in biomarker_runner.run(user_id=user_id, session_id=session_id, new_message=user_content):
+                        if hasattr(event, 'text'):
+                            print(event.text, end="", flush=True)
+                        elif hasattr(event, 'content') and hasattr(event.content, 'parts'):
+                            for part in event.content.parts:
+                                if hasattr(part, 'text'):
+                                    print(part.text, end="", flush=True)
+                        elif hasattr(event, 'parts'):
+                             for part in event.parts:
+                                 if hasattr(part, 'text'):
+                                     print(part.text, end="", flush=True)
+                except Exception as e:
+                    print(f"\nError in biomarker search: {e}")
+                print()
+            elif any(keyword in user_lower for keyword in ["kneaddata", "metaphlan", "humann", "process microbiome", "run pipeline"]):
+                # Delegate to microbiome agent
+                print(f"Agent (Microbiome Tool Runner): ", end="", flush=True)
+                try:
+                    for event in microbiome_runner.run(user_id=user_id, session_id=session_id, new_message=user_content):
+                        if hasattr(event, 'text'):
+                            print(event.text, end="", flush=True)
+                        elif hasattr(event, 'content') and hasattr(event.content, 'parts'):
+                            for part in event.content.parts:
+                                if hasattr(part, 'text'):
+                                    print(part.text, end="", flush=True)
+                        elif hasattr(event, 'parts'):
+                             for part in event.parts:
+                                 if hasattr(part, 'text'):
+                                     print(part.text, end="", flush=True)
+                except Exception as e:
+                    print(f"\nError in microbiome processing: {e}")
                 print()
             else:
                 # Handle with main agent

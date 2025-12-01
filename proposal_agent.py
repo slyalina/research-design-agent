@@ -20,6 +20,10 @@ Your task is to write a structured proposal in Markdown format with the followin
 
 # Title: [Scientific Title]
 
+## Executive Summary
+- Brief overview of the proposed study (2-3 sentences).
+- Key objective and expected impact.
+
 ## 1. Background & Rationale
 - Summarize the research context.
 - Cite key findings from the literature review.
@@ -40,5 +44,6 @@ Your task is to write a structured proposal in Markdown format with the followin
 - Be concise but professional.
 - Use bolding for key metrics (N=..., p<0.05).
 - Ensure the sample size justification is prominent.
+- Use bullet points for readability.
 """
     )
