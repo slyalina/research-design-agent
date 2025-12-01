@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  research-agent:
+    build: .
+    image: research-design-agent
+    container_name: research-design-agent
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - .:/app
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
