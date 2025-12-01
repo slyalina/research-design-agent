@@ -5,9 +5,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from power_analysis_agent import create_power_analysis_agent
 from literature_agent import create_literature_agent
-from literature_agent import create_literature_agent
 from proposal_agent import create_proposal_agent
-from biomarker_agent import create_biomarker_agent
 from biomarker_agent import create_biomarker_agent
 from criticism_agent import create_criticism_agent
 from microbiome_agent import create_microbiome_agent
@@ -20,7 +18,6 @@ def main():
     power_agent = create_power_analysis_agent(model_name)
     literature_agent = create_literature_agent(model_name)
     proposal_agent = create_proposal_agent(model_name)
-    biomarker_agent = create_biomarker_agent(model_name)
     biomarker_agent = create_biomarker_agent(model_name)
     criticism_agent = create_criticism_agent(model_name)
     microbiome_agent = create_microbiome_agent(model_name)

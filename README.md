@@ -25,45 +25,72 @@ The **Bioinformatics Research Design Agent** is an intelligent orchestration sys
 
 ```mermaid
 graph TD
-    User[User] --> Main[Main Agent (Research Lead)]
+    User[User] --> Main[Main Agent: Research Design Lead]
     Main --> Lit[Literature Specialist]
     Main --> Power[Power Analysis Specialist]
-    Lit -- "Effect Sizes & Parameters" --> Main
-    Power -- "Sample Size & Power Curves" --> Main
-    Main -- "Integrated Research Proposal" --> User
+    Main --> Bio[Biomarker Data Specialist]
+    Main --> Micro[Microbiome Tool Runner]
+    Main --> Prop[Proposal Specialist]
+    Main --> Crit[Criticism Agent]
     
-    subgraph "External Tools"
-        Lit -.-> PubMed[PubMed/ArXiv (MCP)]
+    Lit -- "Effect Sizes & Papers" --> Main
+    Power -- "Sample Size & Power" --> Main
+    Bio -- "Public Datasets" --> Main
+    Micro -- "Processed Data" --> Main
+    Prop -- "Research Proposal" --> Main
+    Crit -- "Methodological Review" --> Main
+    
+    Main -- "Integrated Research Proposal + Critique" --> User
+    
+    subgraph "External Tools & Databases"
+        Lit -.-> PubMed[PubMed/ArXiv via MCP]
         Power -.-> R[R Statistical Engine]
+        Bio -.-> SRA[SRA/ENA]
+        Bio -.-> GEO[GEO]
+        Bio -.-> CXG[Cell x Gene]
+        Micro -.-> Tools[KneadData/MetaPhlAn/HUMAnN]
     end
 ```
-
-## Features
 
 ## Features
 
 - **Statistical Power Analysis**: Calculate sample size, power, or effect size for various statistical tests
 - **Simulation-Based Power Analysis**: Support for complex designs (mixed effects, clustered data, survival) via R simulations
 - **Literature Search**: Search academic papers from arXiv, PubMed, bioRxiv, and other sources via MCP
-- **R Integration**: Leverages R's `pwr`, `lme4`, and `simr` packages for robust computations
-- **Multi-Agent Architecture**: Main research design agent delegates to specialized sub-agents (Power Analysis + Literature Review)
+- **Public Biomarker Data Access**: Search and retrieve data from SRA/ENA, GEO, and CZ Cell x Gene
+- **Microbiome Pipeline Integration**: Run KneadData, MetaPhlAn2, and HUMAnN2 on sequencing data
+- **Research Proposal Generation**: Automated synthesis of literature and power analysis into formal proposals
+- **Methodological Criticism**: AI-powered review for statistical rigor, bias detection, and biomarker-specific issues
+- **R Integration**: Leverages R's `pwr`, `lme4`, and `survival` packages for robust computations
+- **Multi-Agent Architecture**: 6 specialized sub-agents orchestrated by a research design lead
+- **Human-in-the-Loop**: Interactive feedback cycle for reviewing and adjusting parameters during proposal generation
 - **MCP Integration**: Uses Model Context Protocol for seamless literature search capabilities
-- **Flexible Test Support**: Currently supports t-tests, with extensibility for ANOVA, correlation, and proportion tests
 
 ## Project Structure
 
 ```
 research-design-agent/
-├── main_agent.py              # Entry point and main agent
-├── power_analysis_agent.py    # Power analysis sub-agent
-├── literature_agent.py        # Literature review sub-agent (MCP)
+├── main_agent.py                # Entry point and orchestration agent
+├── power_analysis_agent.py      # Power analysis specialist
+├── literature_agent.py          # Literature review specialist (MCP)
+├── proposal_agent.py            # Research proposal synthesis specialist
+├── biomarker_agent.py           # Public biomarker data specialist
+├── criticism_agent.py           # Methodological critique specialist
+├── microbiome_agent.py          # Microbiome pipeline tool runner
 ├── tools/
 │   ├── __init__.py
-│   └── r_execution.py         # R script execution tool
+│   ├── r_execution.py           # R script execution tool
+│   └── simulation_tool.py       # Simulation-based power analysis
 ├── r_scripts/
-│   └── power_analysis.R       # R power analysis script
-├── requirements.txt           # Python dependencies
-└── README.md
+│   ├── power_analysis.R         # Analytical power analysis
+│   └── simulation_power.R       # Simulation-based power analysis
+├── generated_scripts/           # Auto-generated R scripts (reproducibility)
+├── output_dir/                  # Output directory for analysis results
+├── test_*.py                    # Test files for various components
+├── requirements.txt             # Python dependencies
+├── DEPLOYMENT.md                # Deployment instructions
+├── VIDEO_SCRIPT.md              # Video submission script
+└── README.md                    # This file
 ```
 
 ## Installation
@@ -99,6 +126,9 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/credentials.json"
 ```bash
 python3 main_agent.py
 ```
+
+For deployment instructions (Docker/Cloud Run), see [DEPLOYMENT.md](DEPLOYMENT.md).
+For the video submission script, see [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md).
 
 ### Example Interactions
 
@@ -174,9 +204,10 @@ The agent uses subprocess-based R execution for:
 
 - [ ] Interactive visualization of power curves
 - [ ] Integration with study design databases
-- [ ] Export to study protocol templates
-- [ ] Data pulling for high dimensional biomarker data (e.g. SRA, GEO, ENA)
-- [ ] Running of bioinformatics pipelines - Metaphlan2, Humann2, DESeq2, limma, etc.
+- [ ] Export to study protocol templates (DOCX, LaTeX)
+- [ ] Direct download and processing of SRA/GEO datasets
+- [ ] Extended bioinformatics pipeline support (DESeq2, limma, edgeR)
+- [ ] Cloud deployment with web interface
 
 ## License
 

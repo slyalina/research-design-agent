@@ -1,2 +1,10 @@
+# Core ADK and AI dependencies
 google-adk>=0.3.0
+
+# Literature search via MCP
 paper-search-mcp
+
+# Biomarker data retrieval
+pysradb              # SRA/ENA database access
+biopython            # GEO and biological data parsing
+cellxgene-census     # Single-cell data from CZ Cell x Gene

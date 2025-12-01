@@ -1,6 +1,7 @@
 from google.adk import Agent
 from google.genai import types
 import json
+import os
 
 # Placeholder imports - these will be used when the packages are installed
 try:
@@ -34,7 +35,7 @@ def search_geo_metadata(query: str) -> str:
     Useful for finding RNA-seq or microarray data.
     """
     try:
-        Entrez.email = "your.email@example.com" # Ideally this should be configured
+        Entrez.email = os.environ.get("ENTREZ_EMAIL", "user@example.com")  # Configure via environment variable
         handle = Entrez.esearch(db="gds", term=query, retmax=5)
         record = Entrez.read(handle)
         handle.close()

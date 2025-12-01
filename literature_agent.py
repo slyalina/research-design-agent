@@ -1,5 +1,3 @@
-import os
-import sys
 from google.adk import Agent
 from google.adk.tools.mcp_tool import McpToolset, StdioConnectionParams
 from mcp import StdioServerParameters
