@@ -209,3 +209,5 @@ __marimo__/
 google_agent_course_whitepapers/
 output_dir/
 generated_scripts/
+*.pptx
+VIDEO_SCRIPT.md

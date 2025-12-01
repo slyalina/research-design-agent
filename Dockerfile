@@ -14,10 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
+    cmake \
+    libnlopt-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R packages
-RUN Rscript -e "install.packages(c('pwr', 'argparser', 'lme4', 'simr', 'survival', 'parallel'), repos='http://cran.us.r-project.org')"
+RUN Rscript -e "install.packages(c('pwr', 'argparser', 'lme4', 'simr', 'survival', 'parallel'), repos='https://cloud.r-project.org')"
 
 # Set work directory
 WORKDIR /app
